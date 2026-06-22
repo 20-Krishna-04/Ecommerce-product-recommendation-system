@@ -1,81 +1,50 @@
-# Ecommerce-product-recommendation-system
+Project Overview
+This project is a Ecommerce Product Recommendation System for an e-commerce website. Its main goals are to make shopping more personal for users, help them discover items they will like, and increase sales for the business.
 
-Product Recommendation System is a machine learning-based project that provides personalized product recommendations to users based on their browsing and purchase history. The system utilizes collaborative filtering and content-based filtering algorithms to analyze user behavior and generate relevant recommendations. This project aims to improve the overall shopping experience for users, increase sales for e-commerce businesses
+It analyzes how users interact with products (like their rating history) and uses Machine Learning to predict what else they might want to buy.
 
-## Dataset
+The Dataset
+What it contains: The project uses an Amazon dataset containing user ratings for electronic products.
 
-I have used an amazon dataset on user ratings for electronic products, this dataset doesn't have any headers. To avoid biases,  each product and user is assigned a unique identifier instead of using their name or any other potentially biased information.
+Anonymization: To keep things fair and unbiased, the dataset doesn't use real names. Every user and every product is given a unique secret ID number.
 
-* You can find the [dataset](https://www.kaggle.com/datasets/vibivij/amazon-electronics-rating-datasetrecommendation/download?datasetVersionNumber=1) here - https://www.kaggle.com/datasets/vibivij/amazon-electronics-rating-datasetrecommendation/download?datasetVersionNumber=1 
+The Three Recommendation Methods
+Your system uses three different approaches to recommend the top 5 products depending on the situation:
 
-* You can find many other similar datasets here - https://jmcauley.ucsd.edu/data/amazon/
+1. Rank-Based Product Recommendation (For New Users)
+Goal: Recommend the most popular items. This is perfect for new customers where the system doesn't know anything about their personal taste yet.
 
+How it works: 1. The system calculates the average rating for every single product.
+2. It counts the total number of ratings (interactions) each product received.
+3. It sorts the products by their average rating, but only includes items that have met a minimum popularity threshold (e.g., at least 50 or 100 ratings). This prevents a product with just one 5-star rating from looking better than a product with thousands of 4.8-star ratings.
 
-## Approach
+2. Similarity-Based Collaborative Filtering (For Logged-in Users)
+Goal: Give personalized recommendations by finding "shopping buddies"—other users who share similar tastes.
 
-### **1) Rank Based Product Recommendation**
-Objective -
-* Recommend products with highest number of ratings.
-* Target new customers with most popular products.
-* Solve the [Cold Start Problem](https://github.com/Vaibhav67979/Ecommerce-product-recommendation-system/blob/18d7fb2b8feafd117f7c3f9f859255c2e28cfbe4/ColdStartProblem.md)
+How it works:
 
-Outputs -
-* Recommend top 5 products with 50/100 minimum ratings/interactions.
+User ID Setup: The system converts text-based user IDs into simple numbers (from 0 to 1539) to make math calculations easier.
 
-Approach -
-* Calculate average rating for each product.
-* Calculate total number of ratings for each product.
-* Create a DataFrame using these values and sort it by average.
-* Write a function to get 'n' top products with specified minimum number of interactions.
+Finding Similar Users: The system uses a mathematical tool called Cosine Similarity to compare the target user's ratings against everyone else. It creates a ranked list of users who rate items most similarly to our target user.
 
+Making the Recommendation: The system looks at what these "similar users" liked. It finds top-rated products that the similar users bought, but our target user hasn't seen yet, and recommends those.
 
-### **2) Similarity based Collaborative filtering**
-Objective -
-* Provide personalized and relevant recommendations to users.
+3. Model-Based Collaborative Filtering (Advanced Personalization)
+Goal: Provide highly accurate personal recommendations while solving two major real-world problems: Sparsity (most users only rate a tiny fraction of the thousands of products available) and Scalability (handling millions of users/products efficiently).
 
-Outputs -
-* Recommend top 5 products based on interactions of similar users.
+How it works:
 
-Approach -
-* Here, user_id is of object, for our convenience we convert it to value of 0 to 1539(integer type).
-* We write a function to find similar users - 
-  1. Find the similarity score of the desired user with each user in the interaction matrix using cosine_similarity and append to an empty list and sort it.
-  2. extract the similar user and similarity scores from the sorted list 
-  3. remove original user and its similarity score and return the rest.
-* We write a function to recommend users - 
-  1. Call the previous similar users function to get the similar users for the desired user_id.
-  2. Find prod_ids with which the original user has interacted -> observed_interactions
-  3. For each similar user Find 'n' products with which the similar user has interacted with but not the actual user.
-  4. return the specified number of products. 
+Compressing the Data: The system takes the giant grid of user ratings and turns it into a "CSR Matrix." This is a programming trick that ignores all the empty blank spaces (where users haven't rated items) to save computer memory and speed up calculations.
 
-### **3) Model based Collaborative filtering**
-Objective -
-* Provide personalized recommendations to users based on their past behavior and preferences, while also addressing the challenges of sparsity and scalability that can arise in other collaborative filtering techniques.
+Singular Value Decomposition (SVD): SVD is a smart math shortcut. It shrinks the giant dataset down into 50 "hidden themes" or "latent features" (like a product being "techy," "budget-friendly," or "durable") instead of looking at thousands of individual data points.
 
-Outputs -
-* Recommend top 5 products for a particular user.
+Predicting the Blanks: By multiplying these shrunk-down math matrices back together, the system calculates a predicted rating for every single product the user hasn't even looked at yet.
 
-Approach -
-* Taking the matrix of product ratings and converting it to a CSR(compressed sparse row) matrix. This is done to save memory and computational time, since only the non-zero values need to be stored.
-* Performing singular value decomposition (SVD) on the sparse or csr matrix. SVD is a matrix decomposition technique that can be used to reduce the dimensionality of a matrix. In this case, the SVD is used to reduce the dimensionality of the matrix of product ratings to 50 latent features.
-* Calculating the predicted ratings for all users using SVD. The predicted ratings are calculated by multiplying the U matrix, the sigma matrix, and the Vt matrix.
-* Storing the predicted ratings in a DataFrame. The DataFrame has the same columns as the original matrix of product ratings. The rows of the DataFrame correspond to the users. The values in the DataFrame are the predicted ratings for each user.
-* A funtion is written to recommend products based on the rating predictions made : 
-  1. It gets the user's ratings from the interactions_matrix.
-  2. It gets the user's predicted ratings from the preds_matrix.
-  3. It creates a DataFrame with the user's actual and predicted ratings.
-  4. It adds a column to the DataFrame with the product names.
-  5. It filters the DataFrame to only include products that the user has not rated.
-  6. It sorts the DataFrame by the predicted ratings in descending order.
-  7. It prints the top num_recommendations products.
-* Evaluating the model :
-  1. Calculate the average rating for all the movies by dividing the sum of all the ratings by the number of ratings.
-  2, Calculate the average rating for all the predicted ratings by dividing the sum of all the predicted ratings by the number of ratings.
-  3. Create a DataFrame called rmse_df that contains the average actual ratings and the average predicted ratings.
-  4. Calculate the RMSE of the SVD model by taking the square root of the mean of the squared errors between the average actual ratings and the average predicted ratings.
+The Recommendation: It filters out items the user already bought, sorts the remaining products by their highest predicted ratings, and shows the top 5.
 
-> The squared parameter in the mean_squared_error function determines whether to return the mean squared error (MSE) or the root mean squared error (RMSE). When squared is set to False, the function returns the RMSE, which is the square root of the MSE. In this case, you are calculating the RMSE, so you have set squared to False. This means that the errors are first squared, then averaged, and finally square-rooted to obtain the RMSE.
-     
+How the Model is Evaluated:
+To make sure these predictions are actually good, the system calculates the RMSE (Root Mean Squared Error):
 
-| ⚠️  This project is solely for learning how recommedation systems work. ⚠️ |
-|-----------------------------------------------------------------------------|
+It compares the average actual ratings given by users against the average predicted ratings calculated by the SVD model.
+
+By finding the mathematical difference between the two, it tells us how "wrong" or "right" the system's guesses are. A lower RMSE score means the system is highly accurate at guessing what users will like.
